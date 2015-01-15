@@ -1,0 +1,271 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>[python]使用imaplib完成自动下载和打包邮件附件 | 学无止境 无远弗界</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="cbsheng">
+  
+  
+    <meta name="description" content="最近忙中偷闲写了个脚本(KCMail)，用它一键下载未读邮件中的附件并自动打包。初衷是帮助朋友方便下载和管理报告作业。">
+  
+  <meta name="description" content="最近忙中偷闲写了个脚本(KCMail)，用它一键下载未读邮件中的附件并自动打包。初衷是帮助朋友方便下载和管理报告作业。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[python]使用imaplib完成自动下载和打包邮件附件">
+<meta property="og:url" content="http://yoursite.com/2014/12/22/-python-使用imaplib完成自动下载和打包邮件附件/">
+<meta property="og:site_name" content="学无止境 无远弗界">
+<meta property="og:description" content="最近忙中偷闲写了个脚本(KCMail)，用它一键下载未读邮件中的附件并自动打包。初衷是帮助朋友方便下载和管理报告作业。">
+<meta property="og:image" content="/img/tools/kcmail.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[python]使用imaplib完成自动下载和打包邮件附件">
+<meta name="twitter:description" content="最近忙中偷闲写了个脚本(KCMail)，用它一键下载未读邮件中的附件并自动打包。初衷是帮助朋友方便下载和管理报告作业。">
+
+  
+    <link rel="alternate" href="/atom.xml" title="学无止境 无远弗界" type="application/atom+xml">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  <!--[if lt IE 9]><script src="//cdn.bootcss.com/html5shiv/3.7.0/html5shiv.min.js"></script><![endif]-->
+  
+  
+<!-- //插入统计代码 -->
+<script type="javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?2d78528e9a11da467ca6fa771a09658b";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+</head>
+
+<body>
+  <div class="wrapper">
+    <header id="header">
+  <div class="title">
+    <h1><a href="/">学无止境 无远弗界</a></h1>
+    <p><a href="/"></a></p>
+  </div>
+  <nav class="nav">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+        <li><a href="/about">about</a></li>
+      
+      
+        <li><a href="/atom.xml">RSS</a></li>
+      
+    </ul>
+    <div class="clearfix"></div>
+  </nav>
+  <div class="clearfix"></div>
+</header>
+    <div class="content"><article class="post">
+  <header>
+    
+      <div class="icon"></div>
+      <a href="/2014/12/22/-python-使用imaplib完成自动下载和打包邮件附件/">
+  <time datetime="2014-12-22T01:27:04.000Z">
+    12月 22 2014
+  </time>
+</a>
+    
+    
+  
+    <h1 class="title">[python]使用imaplib完成自动下载和打包邮件附件</h1>
+  
+
+  </header>
+  
+  <div class="entry">
+    
+      <p>最近忙中偷闲写了个脚本(<a href="kc"><strong>KCMail</strong></a>)，用它一键下载未读邮件中的附件并自动打包。初衷是帮助朋友方便下载和管理报告作业。</p>
+<a id="more"></a>
+
+<p>由于KCmail还有很多使用方法上的优化，所以该脚本会不断地进行改善。而本文也会针对当前脚本的最新版本做详细的注释，如有bug或建议也十分希望你能提供给我 :)</p>
+<p>项目地址：<a href="kc">KCMail</a></p>
+<p><a href="https://github.com/cbsheng/mytools/tree/master/KCMail" target="_blank" rel="external">KCmail</a>使用python编写，主要使用到了<a href="https://docs.python.org/2/library/imaplib.html" target="_blank" rel="external">imaplib</a>, <a href="https://docs.python.org/2/library/zipfile.html" target="_blank" rel="external">zipfile</a>, <a href="https://pypi.python.org/pypi/rarfile/" target="_blank" rel="external">rarfile</a>等库。其中关于 imaplib 库的封装更是使用了到<a href="https://github.com/paramiao" target="_blank" rel="external">paramiao</a>的<a href="https://github.com/paramiao/pyMail" target="_blank" rel="external">pyMail</a>。只是项目中对pyMail有作稍微的自用性修改。<a href="https://github.com/cbsheng/mytools/tree/master/KCMail" target="_blank" rel="external">KCmail</a>的目标是使管理班上同学的报告作业更加方便。</p>
+<hr>
+<h3 id="KCmail的功能"><a href="https://github.com/cbsheng/mytools/tree/master/KCMail" target="_blank" rel="external">KCmail</a>的功能</h3>
+<ol>
+<li>KCmail登录你的邮箱，显示出在收件箱中所有未读的邮件。</li>
+<li>通过对邮件编号的选择，可以下载这些指定的邮件中附件。</li>
+<li>所有附件下载到你指定的目录和文件夹下面，下载完毕之后会把下载的文件打包压缩成一个压缩文件。</li>
+<li>压缩完成后会在文件夹中生成一个readme.txt文件记录有哪些邮件的附件被下载过（即哪些宿舍交了作业报告）。</li>
+<li>最后可以选择是否将压缩文件发送到指定的邮箱中（发送给老师）</li>
+</ol>
+<hr>
+<h3 id="KCmail的实现"><a href="https://github.com/cbsheng/mytools/tree/master/KCMail" target="_blank" rel="external">KCmail</a>的实现</h3>
+<p><a href="https://github.com/cbsheng/mytools/tree/master/KCMail" target="_blank" rel="external">KCmail</a>的核心功能就是显示帐号上所有的未读邮件，然后经选择之后，就将所有附件下载。对于压缩类的附件，会自动解压出来。对于非压缩类的文件则自动下载。最后所有的附件文件会放在一个指定的位置下，并进行压缩打包。</p>
+<p>脚本里，主要使用python的<a href="https://docs.python.org/2/library/imaplib.html" target="_blank" rel="external">imaplib</a>库与imap服务器进行通信。通信使用的协议是<a href="http://zh.wikipedia.org/zh/IMAP" target="_blank" rel="external">IMAP4</a>，可以到查看[RFC1730][RFC1730]了解更多的信息和command。通信成功之后，可以选择邮件的文件夹（例如收件箱或已发送）并获取邮件的信息，然后可以根据返回的信息对邮件进行fetch下来。<strong>需要注意的是，这里的fetch操作会把邮件对应在服务器上状态改为已读。</strong></p>
+<p>对于压缩文件的处理，也可以很方便地使用<a href="https://docs.python.org/2/library/zipfile.html" target="_blank" rel="external">zipfile</a>库和<a href="https://pypi.python.org/pypi/rarfile/" target="_blank" rel="external">rarfile</a>库</p>
+<p>最后对于发邮件的实现，可以使用python标准库的<a href="smtplib">smtplib</a>。<a href="https://github.com/paramiao/pyMail" target="_blank" rel="external">pyMail</a>中的SendMailDealer对<a href="smtplib">smtplib</a>再简单地封装了一层。</p>
+<h3 id="效果图">效果图</h3>
+<p><img src="/img/tools/kcmail.png" alt="kcmail"></p>
+
+    
+  </div>
+  <footer>
+    
+      
+  <div class="categories">
+    <a class="categories-link" href="/categories/python/">python</a>, <a class="categories-link" href="/categories/python/code/">code</a>
+  </div>
+
+      
+  <div class="tags">
+    <a class="tags-link" href="/tags/imaplib/">imaplib</a>, <a class="tags-link" href="/tags/python/">python</a>
+  </div>
+
+      
+    
+    <div class="clearfix"></div>
+  </footer>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">评论</h1>
+  <div class="ds-thread" data-thread-key="2014/12/22/-python-使用imaplib完成自动下载和打包邮件附件/" data-title="[python]使用imaplib完成自动下载和打包邮件附件" data-url="http://yoursite.com/2014/12/22/-python-使用imaplib完成自动下载和打包邮件附件/"></div>
+</section>
+</div>
+  </div>
+  
+  <div id="sidebar" class="widgets-bottom">
+  
+<div class="widget category">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/python/code/">code</a><small>2</small></li>
+  
+    <li><a href="/categories/python/">python</a><small>2</small></li>
+  
+    <li><a href="/categories/操作系统/">操作系统</a><small>1</small></li>
+  
+    <li><a href="/categories/笔记/">笔记</a><small>3</small></li>
+  
+    <li><a href="/categories/读书/">读书</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签</h3>
+  <div class="entry">
+    <a href="/tags/imaplib/" style="font-size: 10.00px;">imaplib</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/操作系统/" style="font-size: 15.00px;">操作系统</a><a href="/tags/笔记/" style="font-size: 20.00px;">笔记</a><a href="/tags/算法/" style="font-size: 10.00px;">算法</a><a href="/tags/计算机网络/" style="font-size: 15.00px;">计算机网络</a><a href="/tags/读书/" style="font-size: 10.00px;">读书</a>
+  </div>
+</div>
+
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/01/03/-python-抓取个人图书馆信息脚本-gzhulib/">[python]抓取个人图书馆信息脚本-gzhulib</a>
+      </li>
+    
+      <li>
+        <a href="/2014/12/22/-python-使用imaplib完成自动下载和打包邮件附件/">[python]使用imaplib完成自动下载和打包邮件附件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/12/14/阅/">我的读物</a>
+      </li>
+    
+      <li>
+        <a href="/2014/12/10/计算机网络笔记-网络层/">计算机网络笔记-网络层</a>
+      </li>
+    
+      <li>
+        <a href="/2014/12/10/计算机网络笔记-运输层/">计算机网络笔记-运输层</a>
+      </li>
+    
+  </ul>
+</div>
+
+
+</div>
+  
+  <footer id="footer"><div class="copyright">
+  
+  &copy; 2015 <a href="/">cbsheng</a>
+  
+</div>
+<div class="clearfix"></div>
+</footer>
+  <script src="//lib.sinaapp.com/js/jquery/1.8/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cbsheng"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script>
+
+
+<div id="rightfix" style="display:none;">
+
+<a href="#comment" id="gocomm" class="fix_btn" title="提问/评论"><i><i></i></i></a>
+
+
+<a href="javascript:void(0)" id="gotop" class="fix_btn" onclick="gotop();" title="回到顶部"><i></i></a>
+<script>
+  function gotop(){
+    $('html,body').animate({
+        scrollTop : '0px'
+      }, 800);
+  }
+  $(function(){
+    _rightfix = $('#rightfix');
+    $(window).scroll(function(){
+      $sollTop = document.documentElement.scrollTop + document.body.scrollTop;
+      if($sollTop > 350){
+        _rightfix.show();
+      }else{
+        _rightfix.hide();
+      }
+    });
+  });
+</script>
+
+</div>
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+</body>
+</html>
